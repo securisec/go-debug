@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
@@ -96,9 +97,12 @@ func New(config ...Config) func(...interface{}) {
 			s = append(s, fmt.Sprintf("%v", d))
 		}
 
-		err := mapstructure.Decode(out, l)
+		l, err := json.Marshal(out)
 		if err != nil {
-			l = s
+			err = mapstructure.Decode(out, &l)
+			if err != nil {
+				l = s
+			}
 		}
 
 		if cfg.ShowInfo {
