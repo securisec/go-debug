@@ -29,6 +29,12 @@ func TestCustom(t *testing.T) {
 	debugMe(s)
 }
 
+func TestJSON(t *testing.T) {
+	debugMe := New()
+	s := &SomeStruct{A: "lalla"}
+	debugMe(s)
+}
+
 func TestCoverage(t *testing.T) {
 	debugMe := New(Config{})
 	debugMe("test")

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"runtime"
 	"strings"
 
@@ -103,6 +104,10 @@ func New(config ...Config) func(...interface{}) {
 			if err != nil {
 				l = s
 			}
+		}
+
+		if _, ok := reflect.ValueOf(l).Interface().([]byte); ok {
+			l = string(l.([]byte))
 		}
 
 		if cfg.ShowInfo {
