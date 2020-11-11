@@ -2,55 +2,87 @@ package debug
 
 import (
 	"fmt"
+	"os"
 	"runtime"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/mitchellh/mapstructure"
 )
 
 const (
-	FgRed      = color.FgRed
-	FgBlue     = color.FgBlue
-	FgYellow   = color.FgYellow
-	FgGreen    = color.FgGreen
-	FgCyan     = color.FgCyan
-	FgMagenta  = color.FgMagenta
-	FgWhite    = color.FgWhite
-	FgBlack    = color.FgBlack
-	Bold       = color.Bold
-	Italic     = color.Italic
-	Underline  = color.Underline
+	// Red foreground
+	Red = color.FgRed
+	// Blue Blue foreground
+	Blue = color.FgBlue
+	// Yellow Yellow foreground
+	Yellow = color.FgYellow
+	// Green Green foreground
+	Green = color.FgGreen
+	// Cyan foreground
+	Cyan = color.FgCyan
+	// Magenta foreground
+	Magenta = color.FgMagenta
+	// White foreground
+	White = color.FgWhite
+	// Black foreground
+	Black = color.FgBlack
+	// Bold text
+	Bold = color.Bold
+	// Italic text
+	Italic = color.Italic
+	// Underline text
+	Underline = color.Underline
+	// BlinkRapid text
 	BlinkRapid = color.BlinkRapid
-	BlinkSlow  = color.BlinkSlow
-	BgRed      = color.BgRed
-	BgBlue     = color.BgBlue
-	BgYellow   = color.BgYellow
-	BgGreen    = color.BgGreen
-	BgCyan     = color.BgCyan
-	BgMagenta  = color.BgMagenta
-	BgWhite    = color.BgWhite
-	BgBlack    = color.BgBlack
+	// BlinkSlow text
+	BlinkSlow = color.BlinkSlow
+	// BgRed background
+	BgRed = color.BgRed
+	// BgBlue background
+	BgBlue = color.BgBlue
+	// BgYellow background
+	BgYellow = color.BgYellow
+	// BgGreen background
+	BgGreen = color.BgGreen
+	// BgCyan background
+	BgCyan = color.BgCyan
+	// BgMagenta background
+	BgMagenta = color.BgMagenta
+	// BgWhite background
+	BgWhite = color.BgWhite
+	// BgBlack background
+	BgBlack = color.BgBlack
 )
 
+// Config debug options
 type Config struct {
+	// Namespace Namespace to identify different debug statements
+	// Optional. Default: DEBUG
 	Namespace string
-	Style     []color.Attribute
-	ShowInfo  bool
+	// Style Array of styles for debug logging
+	// Optional. Default: []color.Attribute{Green}
+	Style []color.Attribute
+	// ShowInfo Show additional information like file name, line number and function name
+	// Optional. Default: true
+	ShowInfo bool
 }
 
+// ConfigDefault default config. Sets foreground color to green and shows additional info. DEBUG namespace.
 var ConfigDefault = Config{
 	Namespace: "DEBUG",
-	Style:     []color.Attribute{FgGreen},
+	Style:     []color.Attribute{Green},
 	ShowInfo:  true,
 }
 
+// New create a new debug function
+// Example:
+// debugApp := debug.New()
+// debugApp("Hello world")
 func New(config ...Config) func(...interface{}) {
 	cfg := ConfigDefault
 	if len(config) > 0 {
 		cfg = config[0]
-		if cfg.Namespace == "" {
-			cfg.Namespace = ""
-		}
 	}
 	formatter := color.New(cfg.Style...)
 	return func(data ...interface{}) {
@@ -76,9 +108,33 @@ func New(config ...Config) func(...interface{}) {
 			if ok {
 				callingFunction = fmt.Sprintf("%s#%s:%d\n", file, details.Name(), no)
 			}
-			formatter.Printf("%s %s%s\n", cfg.Namespace, callingFunction, l)
+			if checkDebugEnv(cfg.Namespace) {
+				formatter.Printf("%s %s%s\n", cfg.Namespace, callingFunction, l)
+			}
 		} else {
-			formatter.Printf("%s %s\n", cfg.Namespace, l)
+			if checkDebugEnv(cfg.Namespace) {
+				formatter.Printf("%s %s\n", cfg.Namespace, l)
+			}
 		}
 	}
+}
+
+func checkDebugEnv(n string) bool {
+	nameSpaces, ok := os.LookupEnv("DEBUG")
+	if !ok {
+		return false
+	}
+	if nameSpaces == "" {
+		return false
+	}
+	if nameSpaces == "*" {
+		return true
+	}
+	for _, namespace := range strings.Split(nameSpaces, ",") {
+		namespace = strings.Trim(namespace, " ")
+		if n == namespace {
+			return true
+		}
+	}
+	return false
 }
