@@ -64,7 +64,7 @@ type Config struct {
 	// Optional. Default: []color.Attribute{Green}
 	Style []color.Attribute
 	// ShowInfo Show additional information like file name, line number and function name
-	// Optional. Default: true
+	// Optional. Default: false
 	ShowInfo bool
 }
 
@@ -72,7 +72,7 @@ type Config struct {
 var ConfigDefault = Config{
 	Namespace: "DEBUG",
 	Style:     []color.Attribute{Green},
-	ShowInfo:  true,
+	ShowInfo:  false,
 }
 
 // New create a new debug function
