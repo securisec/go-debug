@@ -1,15 +1,14 @@
-package debug
+package gdebug
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
 	"runtime"
 	"strings"
+	"unsafe"
 
 	"github.com/fatih/color"
-	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -73,13 +72,13 @@ type Config struct {
 // ConfigDefault default config. Sets foreground color to green and shows additional info. DEBUG namespace.
 var ConfigDefault = Config{
 	Namespace: "DEBUG",
-	Style:     []color.Attribute{Green},
+	Style:     []color.Attribute{color.FgCyan},
 	ShowInfo:  false,
 }
 
 // New create a new debug function
 // Example:
-// debugApp := debug.New()
+// debugApp := gdebug.New()
 // debugApp("Hello world")
 func New(config ...Config) func(...interface{}) {
 	cfg := ConfigDefault
@@ -87,27 +86,17 @@ func New(config ...Config) func(...interface{}) {
 		cfg = config[0]
 	}
 	formatter := color.New(cfg.Style...)
+	show := checkDebugEnv(cfg.Namespace)
 	return func(data ...interface{}) {
 		var (
-			l   interface{}
-			out interface{}
+			hold interface{}
 		)
 
-		s := make([]string, 0)
-		for _, d := range data {
-			s = append(s, fmt.Sprintf("%v", d))
-		}
-
-		l, err := json.Marshal(out)
+		hold, err := json.Marshal(data)
 		if err != nil {
-			err = mapstructure.Decode(out, &l)
-			if err != nil {
-				l = s
-			}
-		}
-
-		if _, ok := reflect.ValueOf(l).Interface().([]byte); ok {
-			l = string(l.([]byte))
+			hold = data
+		} else {
+			hold = unsafeString(hold.([]byte))
 		}
 
 		if cfg.ShowInfo {
@@ -117,12 +106,12 @@ func New(config ...Config) func(...interface{}) {
 			if ok {
 				callingFunction = fmt.Sprintf("%s#%s:%d\n", file, details.Name(), no)
 			}
-			if checkDebugEnv(cfg.Namespace) {
-				formatter.Printf("%s %s%s\n", cfg.Namespace, callingFunction, l)
+			if show {
+				formatter.Printf("%s %s%s\n", cfg.Namespace, callingFunction, hold)
 			}
 		} else {
-			if checkDebugEnv(cfg.Namespace) {
-				formatter.Printf("%s %s\n", cfg.Namespace, l)
+			if show {
+				formatter.Printf("%s %s\n", cfg.Namespace, hold)
 			}
 		}
 	}
@@ -141,9 +130,16 @@ func checkDebugEnv(n string) bool {
 	}
 	for _, namespace := range strings.Split(nameSpaces, ",") {
 		namespace = strings.Trim(namespace, " ")
+		if strings.HasPrefix(namespace, "!") && strings.Replace(namespace, "!", "", 1) == namespace {
+			return false
+		}
 		if n == namespace {
 			return true
 		}
 	}
 	return false
+}
+
+func unsafeString(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
 }

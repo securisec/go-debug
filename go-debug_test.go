@@ -1,4 +1,4 @@
-package debug
+package gdebug
 
 import (
 	"testing"
@@ -18,7 +18,7 @@ func TestCustom(t *testing.T) {
 			Green,
 			Bold,
 		},
-		ShowInfo: false,
+		ShowInfo: true,
 	})
 	s := &SomeStruct{
 		A: "a",
