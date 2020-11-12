@@ -3,6 +3,7 @@ package gdebug
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"strings"
@@ -67,6 +68,9 @@ type Config struct {
 	// ShowInfo Show additional information like file name, line number and function name
 	// Optional. Default: false
 	ShowInfo bool
+	// Out controls where something is being logged.
+	// Optional. Default: os.Stderr
+	Out io.Writer
 }
 
 // ConfigDefault default config. Sets foreground color to green and shows additional info. DEBUG namespace.
@@ -74,6 +78,7 @@ var ConfigDefault = Config{
 	Namespace: "DEBUG",
 	Style:     []color.Attribute{color.FgCyan},
 	ShowInfo:  false,
+	Out:       os.Stderr,
 }
 
 // New create a new debug function
@@ -84,6 +89,9 @@ func New(config ...Config) func(...interface{}) {
 	cfg := ConfigDefault
 	if len(config) > 0 {
 		cfg = config[0]
+	}
+	if cfg.Out == nil {
+		cfg.Out = os.Stderr
 	}
 	formatter := color.New(cfg.Style...)
 	show := checkDebugEnv(cfg.Namespace)

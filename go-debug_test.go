@@ -1,6 +1,7 @@
 package gdebug
 
 import (
+	"os"
 	"testing"
 
 	"github.com/fatih/color"
@@ -15,7 +16,7 @@ func TestCustom(t *testing.T) {
 	debugMe := New(Config{
 		Namespace: "TEST",
 		Style: []color.Attribute{
-			Green,
+			31,
 			Bold,
 		},
 		ShowInfo: true,
@@ -33,6 +34,13 @@ func TestJSON(t *testing.T) {
 	debugMe := New()
 	s := &SomeStruct{A: "lalla"}
 	debugMe(s)
+}
+
+func TestIO(t *testing.T) {
+	debugMe := New(Config{
+		Out: os.Stdout,
+	})
+	debugMe("stdout")
 }
 
 func TestCoverage(t *testing.T) {
