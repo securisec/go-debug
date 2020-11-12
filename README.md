@@ -13,7 +13,7 @@ General rules to remember when setting the `DEBUG` environment:
 Example:
 `export DEBUG=APP`
 ```go
-debugMe := debug.New()
+debugMe := gdebug.New()
 debugMe("some log")
 // This will not log
 
