@@ -31,7 +31,7 @@ func TestCustom(t *testing.T) {
 }
 
 func TestJSON(t *testing.T) {
-	debugMe := New()
+	debugMe := New(Config{Pretty: true})
 	s := &SomeStruct{A: "lalla"}
 	debugMe(s)
 }

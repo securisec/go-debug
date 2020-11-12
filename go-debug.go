@@ -71,6 +71,9 @@ type Config struct {
 	// Out controls where something is being logged.
 	// Optional. Default: os.Stderr
 	Out io.Writer
+	// Pretty print objects
+	// Optional. Default: false
+	Pretty bool
 }
 
 // ConfigDefault default config. Sets foreground color to green and shows additional info. DEBUG namespace.
@@ -79,6 +82,7 @@ var ConfigDefault = Config{
 	Style:     []color.Attribute{color.FgCyan},
 	ShowInfo:  false,
 	Out:       os.Stderr,
+	Pretty:    false,
 }
 
 // New create a new debug function
@@ -94,13 +98,19 @@ func New(config ...Config) func(...interface{}) {
 		cfg.Out = os.Stderr
 	}
 	formatter := color.New(cfg.Style...)
-	show := checkDebugEnv(cfg.Namespace)
+	nameSpace := checkDebugEnv(cfg.Namespace)
 	return func(data ...interface{}) {
 		var (
 			hold interface{}
+			err  error
 		)
 
-		hold, err := json.Marshal(data)
+		if cfg.Pretty {
+			hold, err = json.MarshalIndent(data, "", "  ")
+		} else {
+			hold, err = json.Marshal(data)
+		}
+
 		if err != nil {
 			hold = data
 		} else {
@@ -114,11 +124,11 @@ func New(config ...Config) func(...interface{}) {
 			if ok {
 				callingFunction = fmt.Sprintf("%s#%s:%d\n", file, details.Name(), no)
 			}
-			if show {
+			if nameSpace {
 				formatter.Printf("%s %s%s\n", cfg.Namespace, callingFunction, hold)
 			}
 		} else {
-			if show {
+			if nameSpace {
 				formatter.Printf("%s %s\n", cfg.Namespace, hold)
 			}
 		}
