@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"runtime"
 	"strings"
 	"unsafe"
@@ -105,10 +106,18 @@ func New(config ...Config) func(...interface{}) {
 			err  error
 		)
 
+		check := make([]interface{}, 0)
+		for _, d := range data {
+			if ok := isErrorType(d); ok {
+				check = append(check, d.(error).Error())
+			}
+			check = append(check, d)
+		}
+
 		if cfg.Pretty {
-			hold, err = json.MarshalIndent(data, "", "  ")
+			hold, err = json.MarshalIndent(check, "", "  ")
 		} else {
-			hold, err = json.Marshal(data)
+			hold, err = json.Marshal(check)
 		}
 
 		if err != nil {
@@ -160,4 +169,12 @@ func checkDebugEnv(n string) bool {
 
 func unsafeString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+func isErrorType(err interface{}) bool {
+	t := reflect.TypeOf(err).String()
+	if t == "*errors.errorString" {
+		return true
+	}
+	return false
 }

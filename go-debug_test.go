@@ -1,6 +1,7 @@
 package gdebug
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -46,6 +47,12 @@ func TestIO(t *testing.T) {
 func TestCoverage(t *testing.T) {
 	debugMe := New(Config{})
 	debugMe("test")
+}
+
+func TestError(t *testing.T) {
+	debugMe := New()
+	err := errors.New("some error")
+	debugMe(err)
 }
 
 type SomeStruct struct {
